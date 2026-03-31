@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="House_renting_system-Project.Data/House_renting_system-Project.Data.csproj" Id="f05eaaa9-8f67-441a-b29d-57e3ea1182ae" />
+  <Project Path="House_renting_system-Project/House_renting_system-Project.csproj" />
+</Solution>
