@@ -1,4 +1,5 @@
 ﻿using House_renting_system_Project.Data.Data.Entities;
+using House_renting_system_Project.Models.House.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
@@ -11,16 +12,15 @@ namespace House_renting_system_Project.Models.House
         public string Title { get; set; } = null!;
 
         [Required(ErrorMessage = "Address is required")]
-        [StringLength(200, MinimumLength = 30, ErrorMessage = "Address must be between 30 and 200 characters")]
+        [StringLength(150, MinimumLength = 30, ErrorMessage = "Address must be between 30 and 200 characters")]
         public string Address { get; set; } = null!;
 
         [Required(ErrorMessage = "Description is required")]
-        [StringLength(1000, MinimumLength = 50, ErrorMessage = "Description must be between 50 and 1000 characters")]
+        [StringLength(500, MinimumLength = 50, ErrorMessage = "Description must be between 50 and 1000 characters")]
         [DataType(DataType.MultilineText)]
         public string Description { get; set; } = null!;
 
         [Required(ErrorMessage = "Image URL is required")]
-        [Url(ErrorMessage = "Please enter a valid URL")]
         public string ImageUrl { get; set; } = null!;
 
         [Required(ErrorMessage = "Price per month is required")]
@@ -28,10 +28,11 @@ namespace House_renting_system_Project.Models.House
         [DataType(DataType.Currency)]
         public decimal PricePerMonth { get; set; }
 
-        //[Required(ErrorMessage = "Category is required")]
-        //public int CategoryId { get; set; }
+        [Required(ErrorMessage = "Category is required")]
+        public List<CategoryViewModel>? Categories { get; set; }  
+        public int SelectedCategoryId { get; set; } 
 
-        //public Category Categories { get; set; }
+
 
         //[Required(ErrorMessage = "Agent is required")]
         //public int AgentId { get; set; }

@@ -15,26 +15,26 @@ namespace House_renting_system_Project
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
             builder.Services.AddDbContext<HouseRentingDbContext>(opt => opt.UseSqlServer(connectionString));
-
-
+            
+            
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(
                 opt =>
-                {
-                    opt.User.RequireUniqueEmail = true;
-                    opt.Password.RequireNonAlphanumeric = false;
-                    opt.Password.RequiredLength = 6;
-                    opt.Password.RequireLowercase = false;
-                    opt.Password.RequireUppercase = false;
-                    opt.SignIn.RequireConfirmedEmail = false;
-                }
+            {
+                opt.User.RequireUniqueEmail = true;
+                opt.Password.RequireNonAlphanumeric = false;
+                opt.Password.RequiredLength = 6;
+                opt.Password.RequireLowercase = false;
+                opt.Password.RequireUppercase = false;
+                opt.SignIn.RequireConfirmedEmail = false;
+            }
             )
                 .AddEntityFrameworkStores<HouseRentingDbContext>()
                 .AddDefaultTokenProviders();
 
             builder.Services.ConfigureApplicationCookie(options =>
             {
-                options.LogoutPath = "/User/Login";
+                options.LogoutPath = "/Auth/Login";
                 options.AccessDeniedPath = "/User/AccessDenied";
             });
 
