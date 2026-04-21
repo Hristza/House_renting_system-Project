@@ -22,30 +22,6 @@ namespace House_renting_system_Project.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("House_renting_system_Project.Data.Data.Entities.Agent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Agents");
-                });
-
             modelBuilder.Entity("House_renting_system_Project.Data.Data.Entities.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -127,6 +103,33 @@ namespace House_renting_system_Project.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Cottage"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Single-Family huose"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Duplex"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "One Bedroom"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Two Bedroom"
+                        });
                 });
 
             modelBuilder.Entity("House_renting_system_Project.Data.Data.Entities.House", b =>
@@ -142,8 +145,9 @@ namespace House_renting_system_Project.Data.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int>("AgentId")
-                        .HasColumnType("int");
+                    b.Property<string>("AgentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
@@ -178,6 +182,30 @@ namespace House_renting_system_Project.Data.Migrations
                     b.HasIndex("RenterId");
 
                     b.ToTable("Houses");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Address = "North London, UK (near the border)",
+                            AgentId = "13d2281e-1912-45f4-8aef-9c1288ac7fbc",
+                            CategoryId = 2,
+                            Description = "A big house for your whole family. Don't miss to buy a house with three bedrooms.",
+                            ImageUrl = "https://www.luxury-architecture.net/wp-content/uploads/2017/12/1513217889-7597-FAIRWAYS-010.jpg",
+                            PricePerMonth = 2100.00m,
+                            Title = "Big House Marina"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Address = "Near the Sea Garden in Burgas, Bulgaria",
+                            AgentId = "13d2281e-1912-45f4-8aef-9c1288ac7fbc",
+                            CategoryId = 2,
+                            Description = "It has the best comfort you will ever ask for. With two bedrooms, it is great for your family.",
+                            ImageUrl = "https://cf.bstatic.com/xdata/images/hotel/max1024x768/179489660.jp?k=2029f6d9589b49c95dcc9503a265e292c2cdfcb5277487a0050397c3f8dd545a&o=&hp=1",
+                            PricePerMonth = 1200.00m,
+                            Title = "Family House Comfort"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -313,21 +341,10 @@ namespace House_renting_system_Project.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("House_renting_system_Project.Data.Data.Entities.Agent", b =>
-                {
-                    b.HasOne("House_renting_system_Project.Data.Data.Entities.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("House_renting_system_Project.Data.Data.Entities.House", b =>
                 {
-                    b.HasOne("House_renting_system_Project.Data.Data.Entities.Agent", "Agent")
-                        .WithMany("ManagedHouses")
+                    b.HasOne("House_renting_system_Project.Data.Data.Entities.ApplicationUser", "Agent")
+                        .WithMany("Houses")
                         .HasForeignKey("AgentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -400,9 +417,9 @@ namespace House_renting_system_Project.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("House_renting_system_Project.Data.Data.Entities.Agent", b =>
+            modelBuilder.Entity("House_renting_system_Project.Data.Data.Entities.ApplicationUser", b =>
                 {
-                    b.Navigation("ManagedHouses");
+                    b.Navigation("Houses");
                 });
 
             modelBuilder.Entity("House_renting_system_Project.Data.Data.Entities.Category", b =>

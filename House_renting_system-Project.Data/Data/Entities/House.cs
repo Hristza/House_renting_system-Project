@@ -44,8 +44,9 @@ namespace House_renting_system_Project.Data.Data.Entities
         public int CategoryId { get; set; }
         public Category Category { get; init; } = null!;
 
-        public int AgentId { get; set; }
-        public Agent Agent { get; set; }
+        [ForeignKey(nameof(Agent))]
+        public string AgentId { get; set; }
+        public ApplicationUser Agent { get; set; }
         public string? RenterId { get; set; }
         public ApplicationUser? Renter { get; set; }
         

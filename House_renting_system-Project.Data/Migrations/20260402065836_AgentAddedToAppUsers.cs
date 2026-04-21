@@ -1,11 +1,15 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace House_renting_system_Project.Data.Migrations
 {
+    /// <inheritdoc />
     public partial class AgentAddedToAppUsers : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
@@ -53,6 +57,7 @@ namespace House_renting_system_Project.Data.Migrations
                 onDelete: ReferentialAction.Restrict);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(

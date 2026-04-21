@@ -7,6 +7,6 @@ namespace House_renting_system_Project.Data.Data.Entities
 {
     public class ApplicationUser : IdentityUser
     {
-        
+        public List<House> Houses { get; set; }
     }
 }
