@@ -1,25 +1,131 @@
-﻿@model IEnumerable<HousesViewModel>
+﻿@using House_renting_system_Project.Extentions
+@model House_renting_system_Project.Servises.House.AllHouseViewModel;
 
+@{
+    ViewData["Title"] = "All Houses";
+}
+
+<!-- Search and Filter Form -->
+<form method="get" asp-controller="House" asp-action="AllHouses">
+    <div class="container mb-4">
+        <div class="row g-3 align-items-end">
+            <!-- Category Dropdown -->
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Category</label>
+                <select name="CurentCategory.Id" class="form-select">
+                    <option value="0">All Categories</option>
+                    @foreach (var category in Model.Query.AllCategory)
+                    {
+                        if (Model.Query.CurentCategory != null && Model.Query.CurentCategory.Id == category.Id)
+                        {
+                            <option value="@category.Id" selected>@category.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Search by Text Input -->
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Search by text</label>
+                <input type="text" name="KeyWordText" class="form-control"
+                       placeholder="Enter house name, address..."
+                       value="@Model.Query.KeyWordText" />
+            </div>
+
+            <!-- Sorting Dropdown -->
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Sorting</label>
+                <select name="IsDecending" class="form-select">
+                    @if (Model.Query.IsDecending == false)
+                    {
+                        <option value="false" selected>Ascending (A-Z)</option>
+                        <option value="true">Descending (Z-A)</option>
+                    }
+                    else
+                    {
+                        <option value="false">Ascending (A-Z)</option>
+                        <option value="true" selected>Descending (Z-A)</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Search Button -->
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </div>
+    </div>
+</form>
 
 <h2 class="text-center">@ViewBag.Title</h2>
 <hr />
 
-<div class="text-center row">
-    @foreach (var house in Model)
-    {
-        <a asp-controller="House" asp-action="Details" asp-route-Id="@house.Id" class="nav-link text-black card col-4" style="width: 20rem;">
-            <div class="card col-4" style="width: 20rem;">
-                <img class="card-img-top" src="@house.ImageUrl" alt="House Image">
+@if (Model.Houses != null && Model.Houses.Any())
+{
+    <div class="text-center row">
+        @foreach (var house in Model.Houses)
+        {
+            <div class="card col-4 mb-4" style="width: 20rem;">
+                <img class="card-img-top" src="@house.ImageUrl" alt="House Image" style="height: 200px; object-fit: cover;">
                 <div class="card-body">
                     <h5 class="card-title">@house.Name</h5>
                     <p class="card-text">@house.Address</p>
                 </div>
+                <div class="card-footer">
+                    <a asp-controller="House" asp-action="Details" asp-route-Id="@house.Id" class="btn btn-info w-100 mb-2">
+                        Details
+                    </a>
+                    @if (house.CurentUserIsOwner)
+                    {
+                        <div class="btn-group w-100" role="group">
+                            <a asp-controller="House" asp-action="Edit" asp-route-Id="@house.Id" class="btn btn-secondary">
+                                Edit
+                            </a>
+                        </div>
+                    }
+                    @if (this.User.IsClient())
+                    {
+                        @if (house.CurrentUserIsRenter)
+                        {
+                            <form asp-controller="House" asp-action="Leave" method="post">
+                                <input type="hidden" name="id" value="@house.Id"/>
+                                <button type="submit" class="btn btn-warning">Leave</button>
+                            </form>
+                        }
+                        else if (!house.IsRented)
+                        {
+                            <form asp-controller="House" asp-action="Rent" method="post">
+                                <input type="hidden" name="id" value="@house.Id"/>
+                                <button type="submit" class="btn btn-success">Rent</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Rented</span>
+                        }
+                    }
+                </div>
             </div>
-        </a>
-    }
-</div>
-<footer class="border-top footer text-muted">
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info text-center">
+        <h4>No houses found</h4>
+        <p>Try adjusting your search criteria or add a new house.</p>
+    </div>
+}
+
+<footer class="border-top footer text-muted mt-4">
     <div class="container">
-        <a class="btn btn-primary" role="button" asp-controller="House" asp-action="CreateHouse">Register house</a>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a class="btn btn-primary" role="button" asp-controller="House" asp-action="CreateHouse">Register New House</a>
+        }
     </div>
 </footer>

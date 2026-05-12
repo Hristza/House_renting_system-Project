@@ -9,17 +9,20 @@ namespace House_renting_system_Project.Controllers
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
+
         public AuthController(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
         }
+
         [HttpGet]
         public IActionResult Login()
         {
-            return View(); 
+            return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
@@ -27,19 +30,30 @@ namespace House_renting_system_Project.Controllers
             {
                 return View(model);
             }
-            var user = await userManager.FindByEmailAsync(model.Email);
+
+            // Find user by username first
+            var user = await userManager.FindByNameAsync(model.Username);
+
+            // If not found by username, try by email
+            if (user == null && !string.IsNullOrEmpty(model.Email))
+            {
+                user = await userManager.FindByEmailAsync(model.Email);
+            }
+
             if (user == null)
             {
-                //ModelState.AddModelError();
+                ModelState.AddModelError("", "Invalid login attempt");
                 return View(model);
             }
 
             var result = await userManager.CheckPasswordAsync(user, model.Password);
-            if (result == true) 
-            { 
+            if (result == true)
+            {
                 await signInManager.SignInAsync(user, model.RememberMe);
                 return RedirectToAction("Index", "Home");
             }
+
+            ModelState.AddModelError("", "Invalid login attempt");
             return View(model);
         }
 
@@ -48,6 +62,7 @@ namespace House_renting_system_Project.Controllers
         {
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
@@ -55,6 +70,7 @@ namespace House_renting_system_Project.Controllers
             {
                 return View(model);
             }
+            
             var user = await userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
@@ -62,18 +78,21 @@ namespace House_renting_system_Project.Controllers
                 return View(model);
             }
 
-            var newUser = new ApplicationUser() 
-            { 
+            var newUser = new ApplicationUser()
+            {
                 Email = model.Email,
                 UserName = model.Username
             };
 
             var result = await userManager.CreateAsync(newUser, model.Password);
+
             if (result.Succeeded)
             {
+                await userManager.AddToRoleAsync(newUser, model.Role);
                 return RedirectToAction(nameof(Login));
             }
-            foreach(var error in result.Errors)
+
+            foreach (var error in result.Errors)
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }

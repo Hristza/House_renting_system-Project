@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using House_renting_system_Project.Data.Migrations;
+using System.ComponentModel.DataAnnotations;
+using House_renting_system_Project.Extentions;
 
 namespace House_renting_system_Project.Models.Auth
 {
@@ -19,6 +21,10 @@ namespace House_renting_system_Project.Models.Auth
         [StringLength(100, MinimumLength = 6)]
         [Display(Name = "Password")]
         public string Password { get; set; } = null!;
+
+        [Required]
+        [AllowedValues(RoleNames.Agent, RoleNames.Client, ErrorMessage = "Invalid Role Name")]
+        public string Role { get; init; } = "";
 
     }
 }

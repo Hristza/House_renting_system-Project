@@ -21,6 +21,14 @@
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
 
+    <div class="form-group">
+        <label asp-for="Role">Register as</label>>
+        <select asp-for="Role" class="form-control">
+            <option value="Client">Client</option>
+            <option value="Agent">Agent</option>
+        </select>
+    </div>
+
     <button type="submit" class="btn btn-primary">Register</button>
 </form>
 

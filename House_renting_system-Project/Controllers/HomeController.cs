@@ -1,21 +1,57 @@
-using House_renting_system_Project.Models;
+using House_renting_system_Project.Data.Data;
+using House_renting_system_Project.Servises;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace House_renting_system_Project.Controllers
 {
     public class HomeController : Controller
     {
-        
-        public IActionResult Index()
+        private readonly HouseRentingDbContext context;
+
+        public HomeController(HouseRentingDbContext context)
         {
-            return View();
+            this.context = context;
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public async Task<IActionResult> Index()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var model = new HomeViewModel
+            {
+                IsAuthenticated = User.Identity.IsAuthenticated
+            };
+
+            if (User.Identity.IsAuthenticated && !string.IsNullOrEmpty(userId))
+            {
+                model.UserHousesCount = await context.Houses
+                    .CountAsync(h => h.AgentId == userId && h.IsDeleted == false);
+            }
+
+            return View(model);
+        }
+
+        [Route("Home/Error")]
+        public IActionResult Error(int? statusCode)
+        {
+            if (statusCode.HasValue)
+            {
+                switch (statusCode.Value)
+                {
+                    case 401:
+                        return View("Error401");
+                    case 404:
+                        return View("Error404");
+                }
+            }
+            return View("Error404");
+        }
+
+        public IActionResult ServerError()
+        {
+            return View("Error500");
         }
     }
 }

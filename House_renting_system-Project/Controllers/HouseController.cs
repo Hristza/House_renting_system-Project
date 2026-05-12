@@ -1,150 +1,206 @@
 ﻿using House_renting_system_Project.Data.Data;
-using House_renting_system_Project.Data.Data.Entities;
-using House_renting_system_Project.Models.House;
-using House_renting_system_Project.Models.House.Helpers;
+using House_renting_system_Project.Servises.Contracts;
+using House_renting_system_Project.Servises.House;
+using House_renting_system_Project.Servises.Query;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
 using System.Security.Claims;
+using House_renting_system_Project.Extentions;
 
 namespace House_renting_system_Project.Controllers
 {
     public class HouseController : Controller
     {
         private readonly HouseRentingDbContext context;
+        private readonly IHouseService houseService;
 
-        public HouseController(HouseRentingDbContext context)
+        public HouseController(HouseRentingDbContext context,
+            IHouseService houseService)
         {
             this.context = context;
+            this.houseService = houseService;
         }
+
         [HttpGet]
-        public async Task<IActionResult> AllHouses()
+        public async Task<IActionResult> AllHouses([FromQuery] QueryViewModel model)
         {
             var currentUsersId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var housesViewModel = await context.Houses
-            .AsNoTracking()
-            .Select(h => new HousesViewModel
-            {
-                Id = h.Id,
-                Name = h.Title,
-                Address = h.Address,
-                ImageUrl = h.ImageUrl,
-                CurentUserIsOwner = h.AgentId == currentUsersId
-            })
-            .ToListAsync();
+
+            var allHouseViewModel = await houseService.GetAllHousesByQueryAsync(currentUsersId, model);
+
             ViewBag.Title = "All houses";
-            return View(housesViewModel);
+            return View(allHouseViewModel);
         }
+
         [HttpGet]
-        public async Task<IActionResult> Details(int Id) 
+        public async Task<IActionResult> Details(int Id)
         {
-            var searched = await context.Houses
-                .Include(h => h.Agent)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(h => h.Id == Id);
-
-            var model = new HouseDitailViewModel()
+            var model = await houseService.GetDitailAsync(Id, this.User.GetId());
+            if (model == null)
             {
-                Id = searched.Id,
-                Address = searched.Address,
-                ImageUrl = searched.ImageUrl,
-                Description = searched.Description,
-                CreatedBy = searched.Agent.UserName,
-                Price =searched.PricePerMonth,
-                Name = searched.Title
-            };
-
-            return View(model);
+                return RedirectToAction("Error404", "Home");
+            }
+            else
+            {
+                return View(model);
+            }
         }
+
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = RoleNames.Agent)]
         public async Task<IActionResult> CreateHouse()
         {
-            List<CategoryViewModel> ListOfCategories = await context.Categories
-            .AsNoTracking()
-            .Select(c => new CategoryViewModel
-            {
-                Id = c.Id,
-                Name = c.Name,
-            })
-            .ToListAsync();
-            var houseCategories = new HouseFormViewModel()
-            {
-                Categories = ListOfCategories
-            };
-            return View(houseCategories);
+            var houseForm = await houseService.GetCreateHouseFormAsync();
+            return View(houseForm);
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = RoleNames.Agent)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateHouse(HouseFormViewModel model)
-        {
-
-            var houseCategories = await context.Categories
-                .AsNoTracking()
-                .Select(c => new CategoryViewModel()
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                })
-                .ToListAsync();
-
+        { 
             if (!ModelState.IsValid)
             {
-                
+                var houseCategories = await houseService.GetCategoriesAsync();
                 model.Categories = houseCategories;
+
+                var errors = ModelState.Values.SelectMany(v => v.Errors);
+                foreach (var error in errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.ErrorMessage);
+                }
                 return View(model);
             }
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             bool addressExists = await context.Houses
-                .AnyAsync(h => h.Address.ToLower() == model.Address.ToLower());
+                .AnyAsync(h => h.Address.ToLower() == model.Address.ToLower() && h.IsDeleted == false);
 
             if (addressExists)
             {
+                var houseCategories = await houseService.GetCategoriesAsync();
                 model.Categories = houseCategories;
                 ModelState.AddModelError("Address", "This address is already registered");
                 return View(model);
             }
 
-            var newHouse = new House
-            {
-                Title = model.Title,
-                Address = model.Address,
-                Description = model.Description,
-                ImageUrl = model.ImageUrl,
-                PricePerMonth = model.PricePerMonth,
-                CategoryId = model.SelectedCategoryId,
-                AgentId = userId
-            };
+            houseService.PostAddNewHouseAsync(userId, model);
 
-            context.Houses.Add(newHouse);
-            await context.SaveChangesAsync();
-
+            TempData["SuccessMessage"] = "House created successfully!";
             return RedirectToAction(nameof(AllHouses));
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = RoleNames.Agent)]
         public async Task<IActionResult> MyHouses()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var houses = context.Houses
-                .Where(h => h.AgentId == userId)
-                .Select(h => new HousesViewModel
-                {
-                    Address = h.Address,
-                    ImageUrl = h.ImageUrl,
-                    Name = h.Title,
-                    Id = h.Id,
-                    CurentUserIsOwner = true
-                })
-                .ToListAsync();
+            var allHouseViewModel = await houseService.GetHousesByUserIdAsync(userId);
+
             ViewBag.Title = "My houses";
-            return View(nameof(AllHouses), houses);
+            return View(nameof(AllHouses), allHouseViewModel);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = RoleNames.Agent)]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var house = houseService.GetHouseByIdAsync(id);
+
+            if (house == null)
+            {
+                return RedirectToAction("Error404", "Home");
+            }
+
+            var houseCategories = await houseService.GetCategoriesAsync();
+
+            var model = new HouseFormViewModel()
+            {
+                Id = house.Id,
+                Address = house.Result.Address,
+                ImageUrl = house.Result.ImageUrl,
+                Description = house.Result.Description,
+                Title = house.Result.Title,
+                PricePerMonth = house.Result.PricePerMonth,
+                Categories = houseCategories,
+                SelectedCategoryId = house.Result.CategoryId
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = RoleNames.Agent)]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(HouseFormViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var houseCategories = await houseService.GetCategoriesAsync();
+                model.Categories = houseCategories;
+
+                var errors = ModelState.Values.SelectMany(v => v.Errors);
+                foreach (var error in errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.ErrorMessage);
+                }
+
+                return View(model);
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var house = await houseService.PostEditHouseAsync(model, userId);
+            if (house == "404")
+            {
+                return RedirectToAction("Error404", "Home");
+            }
+            if (house == "401")
+            {
+                return RedirectToAction("Error401", "Home");
+            }
+
+            TempData["SuccessMessage"] = "House updated successfully!";
+            return RedirectToAction(nameof(MyHouses));
+        }
+
+        [Authorize(Roles = RoleNames.Agent)]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var delite = await houseService.DeleteHouseAsync(id);
+            return RedirectToAction(nameof(MyHouses));
+        }
+
+        [Authorize(Roles = RoleNames.Client)]
+        public async Task<IActionResult> Rent(int id)
+        {
+            var currentUserId = this.User.GetId();
+            if (string.IsNullOrWhiteSpace(currentUserId))
+            {
+                return this.Unauthorized();
+            }
+            var succes = await houseService.RentAsync(id, currentUserId);
+            if (succes)
+            {
+                return this.RedirectToAction(nameof(this.AllHouses));
+            }
+            return this.Unauthorized();
+        }
+        [Authorize(Roles = RoleNames.Client)]
+        public async Task<IActionResult> Leave(int id)
+        {
+            var currentUserId = this.User.GetId();
+            if (string.IsNullOrWhiteSpace(currentUserId))
+            {
+                return this.Unauthorized();
+            }
+            var succes = await houseService.LeaveAsync(id, currentUserId);
+            if (succes)
+            {
+                return this.RedirectToAction(nameof(this.AllHouses));
+            }
+            return this.Unauthorized();
         }
     }
 }

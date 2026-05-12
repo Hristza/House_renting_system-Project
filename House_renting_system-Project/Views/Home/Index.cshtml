@@ -1,16 +1,198 @@
-﻿
+﻿@model HomeViewModel
+
 @{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    @if (User.Identity.IsAuthenticated)
-    {
-        <h1 class="display-4">Welcome @User.FindFirstValue(ClaimTypes.Name)</h1>
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
     }
-    else
-    {
-        <h1 class="display-4">Welcome</h1>
+    
+    .hero-section {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
     }
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    
+    .welcome-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(5px);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .house-count-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .house-count-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+        margin: 0;
+        line-height: 1;
+    }
+    
+    .house-count-label {
+        font-size: 1rem;
+        color: white;
+        margin: 0;
+    }
+    
+    .btn-custom {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+    }
+    
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    
+    .welcome-message {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+    
+    .sub-message {
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 2rem;
+    }
+    
+    .icon-large {
+        font-size: 4rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-container {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-card {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 1rem 2rem;
+        text-align: center;
+        min-width: 150px;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: #666;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="hero-section">
+    <div class="container">
+        <div class="welcome-card text-center">
+            @if (Model.IsAuthenticated)
+            {
+                @if (Model.UserHousesCount > 0)
+                {
+                    <div class="house-count-badge">
+                        <div>
+                            <p class="house-count-number">@Model.UserHousesCount</p>
+                            <p class="house-count-label">@(Model.UserHousesCount == 1 ? "House" : "Houses")</p>
+                        </div>
+                    </div>
+                    
+                    <h1 class="welcome-message">Welcome back!</h1>
+                    <p class="sub-message">You have <strong>@Model.UserHousesCount</strong> @(Model.UserHousesCount == 1 ? "property" : "properties") listed on our platform.</p>
+                    
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <p class="stat-number">@Model.UserHousesCount</p>
+                            <p class="stat-label">Active Listings</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a asp-controller="House" asp-action="MyHouses" class="btn btn-primary btn-custom">
+                            <i class="fas fa-home"></i> View My Properties
+                        </a>
+                        <a asp-controller="House" asp-action="CreateHouse" class="btn btn-success btn-custom">
+                            <i class="fas fa-plus-circle"></i> Add New House
+                        </a>
+                        <a asp-controller="House" asp-action="AllHouses" class="btn btn-outline-secondary btn-custom">
+                            <i class="fas fa-search"></i> Browse All Houses
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="icon-large">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <h1 class="welcome-message">Welcome @User.FindFirstValue(ClaimTypes.Name)!</h1>
+                    <p class="sub-message">You don't have any houses listed yet. Start by adding your first property!</p>
+                    
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a asp-controller="House" asp-action="CreateHouse" class="btn btn-primary btn-custom">
+                            <i class="fas fa-plus-circle"></i> List Your First House
+                        </a>
+                        <a asp-controller="House" asp-action="AllHouses" class="btn btn-outline-secondary btn-custom">
+                            <i class="fas fa-search"></i> Browse Houses
+                        </a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="icon-large">
+                    <i class="fas fa-building"></i>
+                </div>
+                <h1 class="welcome-message">Welcome to Best House Renting Worldwide</h1>
+                <p class="sub-message">Find your dream home or list your property with us!</p>
+                
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a asp-controller="Auth" asp-action="Login" class="btn btn-primary btn-custom">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    <a asp-controller="Auth" asp-action="Register" class="btn btn-success btn-custom">
+                        <i class="fas fa-user-plus"></i> Register
+                    </a>
+                    <a asp-controller="House" asp-action="AllHouses" class="btn btn-outline-secondary btn-custom">
+                        <i class="fas fa-search"></i> Browse Houses
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+}

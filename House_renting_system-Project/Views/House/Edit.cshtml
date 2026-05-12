@@ -1,6 +1,6 @@
 ﻿@model HouseFormViewModel
 @{
-    ViewData["Title"] = "Register New House";
+    ViewData["Title"] = "Edit House";
 }
 
 <div class="container mt-4">
@@ -8,12 +8,13 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4>Register New House</h4>
+                    <h4>Edit House</h4>
                 </div>
 
                 <div class="card-body">
-                    <form asp-action="CreateHouse" asp-controller="House" method="post">
+                    <form asp-action="Edit" asp-controller="House" method="post">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
 
                         <div asp-validation-summary="All" class="alert alert-danger"></div>
 
@@ -61,7 +62,14 @@
                                 {
                                     @foreach (var category in Model.Categories)
                                     {
-                                        <option value="@category.Id">@category.Name</option>
+                                        if (category.Id == Model.SelectedCategoryId)
+                                        {
+                                            <option value="@category.Id" selected>@category.Name</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@category.Id">@category.Name</option>
+                                        }
                                     }
                                 }
                             </select>
@@ -70,8 +78,13 @@
 
                         <!-- Buttons -->
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">Create House</button>
-                            <a asp-controller="House" asp-action="AllHouses" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a asp-controller="House" asp-action="Delete" asp-route-id="@Model.Id"
+                                   class="btn btn-danger"
+                                   onclick="return confirm('Are you sure you want to delete this house?')">
+                                Delete
+                            </a>
+                            <a asp-controller="House" asp-action="MyHouses" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>
