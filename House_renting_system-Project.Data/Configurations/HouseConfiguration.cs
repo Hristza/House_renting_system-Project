@@ -25,6 +25,7 @@ namespace House_renting_system_Project.Data.Configurations
                 .HasForeignKey(h => h.AgentId)
                 .OnDelete(DeleteBehavior.Restrict);
             builder.HasData(SeedHouses());
+            builder.HasQueryFilter(h => h.IsDeleted == false);
 
 
         }
